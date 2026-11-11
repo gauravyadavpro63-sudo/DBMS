@@ -499,3 +499,271 @@ Phantom Read
 Correct!(2,3,4,1)
 
 
+1. What is a Schedule in DBMS?
+A schedule is the order in which operations of multiple transactions are executed in a database.
+
+2. Types of Schedules
+There are two fundamental types:
+A. Serial Schedule
+A serial schedule executes one transaction completely before starting another transaction.
+
+B. Non-Serial Schedule
+A non-serial schedule allows operations of multiple transactions to be interleaved.
+
+
+1. What is Conflict Equivalence?
+Two schedules are called conflict equivalent if:
+1. They contain the same operations of the same transactions.
+2. The relative order of every pair of conflicting operations is the same in both schedules.
+
+
+2. What are conflicting operations?
+Two operations conflict if ALL three conditions are satisfied:
+- They belong to different transactions.
+- They operate on the same data item.
+- At least one operation is a WRITE.
+There are exactly three types of conflicts:
+Operation 1	Operation 2	Conflict?
+READ(A)	READ(A)	No
+READ(A)	WRITE(A)	Yes
+WRITE(A)	READ(A)	Yes
+WRITE(A)	WRITE(A)	Yes
+
+
+
+
+3. Understanding with an example
+Consider two schedules:
+
+Schedule S1
+Order	Operation
+1	T1: READ(A)
+2	T2: READ(A)
+3	T1: WRITE(A)
+4	T2: WRITE(A)
+
+Schedule S2
+Order	Operation
+1	T2: READ(A)
+2	T1: READ(A)
+3	T1: WRITE(A)
+4	T2: WRITE(A)
+
+Let's compare them.
+
+Step 1: Identify conflicting pairs.
+
+In S1:
+- T1: READ(A) before T2: WRITE(A).
+- T2: READ(A) before T1: WRITE(A).
+- T1: WRITE(A) before T2: WRITE(A).
+Step 2: Compare their relative order in S2.
+- T1: READ(A) before T2: WRITE(A) → Same.
+- T2: READ(A) before T1: WRITE(A) → Same.
+- T1: WRITE(A) before T2: WRITE(A) → Same.
+Conflict Equivalent
+Therefore, S1 and S2 are conflict equivalent.
+
+
+
+4. Another example: Not Conflict Equivalent
+Consider:
+
+S1
+T1: READ(A)
+T2: WRITE(A)
+T1: WRITE(A)
+
+
+S2
+T1: READ(A)
+T1: WRITE(A)
+T2: WRITE(A)
+
+
+Look at the conflicting pair:
+
+T2: WRITE(A) and T1: WRITE(A).
+- In S1: T2 WRITE happens before T1 WRITE.
+- In S2: T1 WRITE happens before T2 WRITE.
+Not Conflict Equivalent
+The relative order of a conflicting pair has changed.
+
+
+. What is Conflict Serializability?
+A schedule is called conflict serializable if it is conflict equivalent to at least one serial schedule.
+
+2. Let's understand with an example
+Consider this schedule:
+Schedule S1
+1. T1: READ(A)
+2. T2: READ(A)
+3. T1: WRITE(A)
+4. T1: READ(B)
+5. T2: WRITE(A)
+6. T2: READ(B)
+
+
+Is this schedule conflict serializable?
+
+We need to find whether it is conflict equivalent to a serial schedule.
+
+Let's use a powerful technique called the Precedence Graph (Serialization Graph).
+
+3. Build the Precedence Graph
+A precedence graph is a directed graph used to determine whether a schedule is conflict serializable.
+
+It has two components:
+- Nodes: Each transaction is represented by a node.
+- Edges: A directed edge represents the order of conflicting operations.
+
+Step 1: Create nodes
+We have two transactions: T1 and T2.
+T1
+
+T2
+
+
+Initially, there are no edges.
+
+Step 2: Identify conflicting operations
+Look at our schedule:
+T1	T2
+R(A)	
+	R(A)
+W(A)	
+R(B)	
+	W(A)
+	R(B)
+
+       Now identify the conflicts.
+
+Conflict 1:
+
+T2: R(A) happens before T1: W(A).
+
+Therefore:
+
+T2 ---> T1
+
+Conflict 2:
+
+T1: R(A) happens before T2: W(A).
+
+Therefore:
+
+T1----> T2
+Conflict 3:
+
+T1: W(A) happens before T2: W(A).
+
+Again:
+
+T1---> T2
+Step 3: Draw the graph
+Step 4: Check for a cycle
+Here we have:
+
+T1--->T2 ---> T1
+
+Not Conflict Serializable
+A precedence graph containing a cycle means the schedule is NOT conflict serializable
+
+4. The golden rule for GATE
+Memorize this table:
+Precedence graph	Result
+No cycle (acyclic)	Conflict Serializable
+Cycle exists	Not Conflict Serializable
+
+
+
+Question
+Let \(R_i(z)\) and \(W_i(z)\) denote the read and write operations on a data item \(z\) by transaction \(T_i\), respectively.
+
+Consider the following schedule containing four transactions:
+\[
+S = R_4(x)\ R_2(x)\ R_3(x)\ R_1(y)\
+W_1(y)\ W_2(x)\ W_3(y)\ R_4(y)
+\]
+
+Determine whether the given schedule is conflict serializable. If yes, find its equivalent serial schedule.
+
+
+Solution
+Step 1: Understand the given schedule
+Position	Operation	Meaning
+1	R4(x)	T4 reads x
+2	R2(x)	T2 reads x
+3	R3(x)	T3 reads x
+4	R1(y)	T1 reads y
+5	W1(y)	T1 writes y
+6	W2(x)	T2 writes x
+7	W3(y)	T3 writes y
+8	R4(y)	T4 reads y
+
+Step 2: Rules for conflicting operations
+Two operations conflict if:
+1. They belong to different transactions.
+2. They access the same data item.
+3. At least one operation is a WRITE.
+Three types of conflicts:
+- READ-WRITE (R-W)
+- WRITE-READ (W-R)
+- WRITE-WRITE (W-W)
+READ-READ (R-R) never conflicts.
+Step 3: Identify conflicting operations
+A. Conflicts on data item x
+Operations	Conflict type	Edge
+R4(x) → W2(x)	R-W	T4 → T2
+R3(x) → W2(x)	R-W	T3 → T2
+
+B. Conflicts on data item y
+Operations	Conflict type	Edge
+R1(y) → W3(y)	R-W	T1 → T3
+W1(y) → W3(y)	W-W	T1 → T3
+W1(y) → R4(y)	W-R	T1 → T4
+W3(y) → R4(y)	W-R	T3 → T4
+
+Note:
+- Operations belonging to the same transaction do not create graph edges.
+- READ-READ operations do not create graph edges.
+Step 4: Construct the precedence graph
+Create one node for each transaction:
+
+T1, T2, T3, T4.
+
+All directed edges:
+- T1 → T3
+- T1 → T4
+- T3 → T4
+- T3 → T2
+- T4 → T2
+Text representation of the graph:
+
+Step 5: Check for a cycle
+Follow the dependencies:
+
+T1 → T3 → T4 → T2
+
+There is no directed cycle.
+
+Therefore, the precedence graph is a Directed Acyclic Graph (DAG).
+
+Conclusion: The schedule IS conflict serializable.
+Step 6: Find the equivalent serial schedule
+Using topological sorting:
+- T1 must execute before T3.
+- T3 must execute before T4.
+- T4 must execute before T2.
+Therefore:
+
+
+Final Answer
+Yes, the given schedule is Conflict Serializable.
+
+Equivalent serial schedule:
+
+T1 → T3 → T4 → T2
+
+
+time complaxity --->n*n 
